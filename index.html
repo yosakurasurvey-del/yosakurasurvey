@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ご来店アンケート</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink:       #262220;
+  --ink-mid:   #3A342E;
+  --sub:       #948C82;
+  --border:    #E7E2D9;
+  --border-lt: #F0ECE4;
+  --bg:        #FFFFFF;
+  --card:      #FFFFFF;
+  --field:     #FCFBF9;
+  --accent:    #B8874A;
+  --accent-dk: #9C6F38;
+  --accent-soft:#F7EFE1;
+  --white:     #FFFFFF;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 12px 24px;
+  font-family: 'Cormorant Garamond', 'Noto Sans JP', 'YuMincho', '游明朝', 'Hiragino Mincho ProN', serif;
+  color: var(--ink);
+}
+
+/* ── Lang switcher ── */
+.lang-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 8px;
+  background: rgba(255,255,255,.94);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+}
+.lang-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--sub);
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: .04em;
+  padding: 4px 8px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all .25s;
+  white-space: nowrap;
+}
+.lang-btn:hover { border-color: var(--accent); color: var(--accent-dk); }
+.lang-btn.active { border-color: var(--accent); color: var(--accent-dk); background: var(--accent-soft); }
+
+/* ── Card ── */
+.card {
+  width: 100%;
+  max-width: 560px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(40,30,10,.04), 0 16px 40px rgba(40,30,10,.06);
+  overflow: hidden;
+  margin-top: 52px;
+}
+
+/* ── Top accent bar ── */
+.card-top {
+  height: 3px;
+  background: var(--accent);
+}
+
+.card-inner { padding: 40px 40px 36px; }
+@media(max-width:480px){ .card-inner { padding: 30px 22px 26px; } }
+
+/* ── Logo ── */
+.logo-wrap { text-align: center; margin-bottom: 22px; }
+.logo-img {
+  display: block;
+  margin: 0 auto;
+  max-width: 160px;
+  max-height: 72px;
+  object-fit: contain;
+}
+
+/* ── Header ── */
+.header { text-align: center; margin-bottom: 34px; }
+.mon { font-size: 24px; color: var(--accent); line-height: 1; margin-bottom: 10px; letter-spacing: .08em; }
+.title-ja {
+  font-size: 21px;
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: .14em;
+  margin-bottom: 4px;
+}
+.title-sub {
+  font-size: 12px;
+  color: var(--sub);
+  letter-spacing: .1em;
+  font-style: italic;
+}
+.divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 16px 0;
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border));
+}
+.divider::after { background: linear-gradient(270deg, transparent, var(--border)); }
+.divider-dot { width: 5px; height: 5px; background: var(--accent); border-radius: 50%; flex-shrink: 0; }
+
+/* ── Progress ── */
+.progress-wrap { margin-bottom: 30px; }
+.progress-steps {
+  display: flex; justify-content: center; gap: 0; align-items: center;
+}
+.step-node {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.step-circle {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--sub);
+  transition: all .4s ease;
+  background: var(--white);
+  position: relative; z-index: 1;
+}
+.step-circle.done {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--white);
+}
+.step-circle.active {
+  border-color: var(--accent);
+  color: var(--accent-dk);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.step-label {
+  font-size: 9px; color: var(--sub); letter-spacing: .06em;
+  white-space: nowrap;
+  transition: color .3s;
+  text-align: center;
+  max-width: 48px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.step-node.active .step-label { color: var(--accent-dk); }
+.step-connector {
+  flex: 1; height: 1px;
+  background: var(--border);
+  min-width: 16px; max-width: 46px;
+  margin-bottom: 18px;
+}
+
+/* ── Slide viewport ── */
+.slide-viewport { overflow: hidden; position: relative; }
+
+.slide {
+  display: none;
+  animation: slideIn .45s cubic-bezier(.16,1,.3,1) forwards;
+}
+.slide.active { display: block; }
+.slide.exit {
+  display: block;
+  animation: slideOut .35s cubic-bezier(.4,0,1,1) forwards;
+  pointer-events: none;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideOut {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-28px); }
+}
+
+/* ── Question ── */
+.q-label {
+  font-size: 11px;
+  letter-spacing: .13em;
+  color: var(--accent-dk);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: block;
+}
+.q-text {
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: .04em;
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+.optional-tag {
+  font-size: 11px;
+  color: var(--sub);
+  font-style: italic;
+  margin-bottom: 18px;
+}
+
+/* ── Options grid ── */
+.options { display: flex; flex-direction: column; gap: 8px; }
+.opt {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all .2s;
+  background: var(--field);
+  color: var(--ink-mid);
+  font-family: inherit;
+  font-size: 15px;
+  letter-spacing: .02em;
+  text-align: left;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+.opt::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--accent);
+  transform: scaleY(0);
+  transition: transform .2s;
+}
+.opt:hover { border-color: var(--accent); background: var(--white); }
+.opt:hover::before { transform: scaleY(1); }
+.opt.selected {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+.opt.selected::before { transform: scaleY(1); }
+.opt-icon { font-size: 17px; flex-shrink: 0; width: 22px; text-align: center; }
+
+/* Other free-text input */
+.other-input-wrap { margin-top: 10px; }
+.other-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--field);
+  outline: none;
+  transition: border-color .2s;
+}
+.other-input:focus { border-color: var(--accent); }
+.other-input::placeholder { color: var(--sub); font-style: italic; }
+
+/* Stars */
+.stars-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.stars-row-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-top: 6px;
+}
+.star-opt {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 12px 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  background: var(--field);
+  transition: all .2s;
+  font-family: inherit;
+  min-width: 0;
+}
+.star-opt .star-glyph { font-size: 19px; color: var(--sub); transition: color .2s; }
+.star-opt .star-num { font-size: 10px; color: var(--sub); letter-spacing: .02em; text-align: center; }
+.star-opt:hover { border-color: var(--accent); background: var(--white); }
+.star-opt:hover .star-glyph { color: var(--accent); }
+.star-opt.selected { border-color: var(--accent); background: var(--accent-soft); }
+.star-opt.selected .star-glyph { color: var(--accent-dk); }
+.star-opt.selected .star-num { color: var(--ink-mid); }
+
+/* Textarea */
+.feedback-area {
+  width: 100%; min-height: 130px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 13px 15px;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--field);
+  resize: vertical;
+  outline: none;
+  transition: border-color .2s;
+  letter-spacing: .02em;
+  line-height: 1.7;
+}
+.feedback-area:focus { border-color: var(--accent); }
+.feedback-area::placeholder { color: var(--sub); font-style: italic; }
+
+/* ── Nav buttons ── */
+.nav { display: flex; gap: 10px; margin-top: 26px; }
+.btn-back {
+  padding: 12px 20px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--sub);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: .08em;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-back:hover { border-color: var(--sub); color: var(--ink-mid); }
+.btn-next {
+  flex: 1;
+  padding: 13px;
+  background: var(--accent);
+  border: none;
+  color: var(--white);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: .12em;
+  cursor: pointer;
+  transition: all .25s;
+  font-weight: 500;
+}
+.btn-next:hover { background: var(--accent-dk); }
+.btn-next:disabled { opacity: .35; cursor: not-allowed; }
+
+/* ── Thank you screen ── */
+.thankyou {
+  display: none;
+  text-align: center;
+  padding: 20px 0 10px;
+}
+.thankyou.show { display: block; }
+
+.ty-mon {
+  font-size: 40px;
+  color: var(--accent);
+  opacity: 0;
+  transform: scale(.6) rotate(-8deg);
+  transition: opacity .8s ease, transform .8s cubic-bezier(.16,1,.3,1);
+  display: block;
+  margin-bottom: 10px;
+}
+.ty-mon.visible { opacity: 1; transform: scale(1) rotate(0deg); }
+
+.ty-particles {
+  position: relative; height: 40px; margin: 0 auto 16px;
+  overflow: visible;
+}
+.ty-particles span {
+  position: absolute;
+  font-size: 13px;
+  opacity: 0;
+  animation: floatPetal 2.5s ease forwards;
+}
+@keyframes floatPetal {
+  0%   { opacity: 0; transform: translateY(0) rotate(0deg) scale(.5); }
+  20%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-56px) rotate(120deg) scale(1); }
+}
+
+.ty-rule {
+  width: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  margin: 0 auto 22px;
+  transition: width 1s ease .3s;
+}
+.ty-rule.visible { width: 70%; }
+
+.ty-main {
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: .12em;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .7s ease .5s, transform .7s ease .5s;
+  margin-bottom: 10px;
+}
+.ty-main.visible { opacity: 1; transform: translateY(0); }
+
+.ty-sub {
+  font-size: 13px;
+  color: var(--sub);
+  letter-spacing: .1em;
+  font-style: italic;
+  opacity: 0;
+  transition: opacity .7s ease .8s;
+}
+.ty-sub.visible { opacity: 1; }
+
+.ty-smiley {
+  font-size: 30px;
+  margin-top: 18px;
+  opacity: 0;
+  transform: translateY(8px) scale(.8);
+  transition: opacity .6s ease, transform .6s cubic-bezier(.16,1,.3,1);
+}
+.ty-smiley.visible { opacity: 1; transform: translateY(0) scale(1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .slide, .ty-mon, .ty-main, .ty-rule, .ty-smiley { animation: none !important; transition: none !important; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- Language switcher -->
+<div class="lang-bar" id="langBar">
+  <button class="lang-btn active" data-lang="ja" onclick="setLang('ja')">日本語</button>
+  <button class="lang-btn" data-lang="en" onclick="setLang('en')">English</button>
+  <button class="lang-btn" data-lang="zh-hans" onclick="setLang('zh-hans')">简体中文</button>
+  <button class="lang-btn" data-lang="zh-hant" onclick="setLang('zh-hant')">繁體中文</button>
+  <button class="lang-btn" data-lang="ko" onclick="setLang('ko')">한국어</button>
+  <button class="lang-btn" data-lang="vi" onclick="setLang('vi')">Tiếng Việt</button>
+</div>
+
+<div class="card">
+  <div class="card-top"></div>
+  <div class="card-inner">
+
+    <!-- Logo: 下の LOGO_URL にロゴ画像のURL（またはファイルパス）を設定すると、ここにロゴが表示されます -->
+    <div class="logo-wrap" id="logoWrap">
+      <img class="logo-img" id="logoImg" alt="Logo">
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+      <div class="title-ja" id="headerTitle">ご来店アンケート</div>
+      <div class="title-sub" id="headerSub">Customer Satisfaction Survey</div>
+      <div class="divider"><div class="divider-dot"></div></div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-steps" id="progressSteps"></div>
+    </div>
+
+    <!-- Slides -->
+    <div class="slide-viewport" id="slideViewport">
+
+      <!-- Step: Country -->
+      <div class="slide active" id="slide-0">
+        <span class="q-label" id="ql-0"></span>
+        <div class="q-text" id="qt-0"></div>
+        <div class="options" id="opts-0"></div>
+        <div class="other-input-wrap" id="countryOtherWrap" style="display:none;">
+          <input type="text" class="other-input" id="countryOtherInput">
+        </div>
+        <div class="nav">
+          <button class="btn-next" id="btn-0" onclick="next(0)" disabled></button>
+        </div>
+      </div>
+
+      <!-- Step: Rating -->
+      <div class="slide" id="slide-1">
+        <span class="q-label" id="ql-1"></span>
+        <div class="q-text" id="qt-1"></div>
+        <div class="stars-row" id="opts-1"></div>
+        <div class="stars-row-2" id="opts-1b"></div>
+        <div class="nav">
+          <button class="btn-back" onclick="back(1)">←</button>
+          <button class="btn-next" id="btn-1" onclick="next(1)" disabled></button>
+        </div>
+      </div>
+
+      <!-- Step: Source -->
+      <div class="slide" id="slide-2">
+        <span class="q-label" id="ql-2"></span>
+        <div class="q-text" id="qt-2"></div>
+        <div class="options" id="opts-2"></div>
+        <div class="nav">
+          <button class="btn-back" onclick="back(2)">←</button>
+          <button class="btn-next" id="btn-2" onclick="next(2)" disabled></button>
+        </div>
+      </div>
+
+      <!-- Step: Improvement feedback (only shown when rating is 悪い/とても悪い) -->
+      <div class="slide" id="slide-3">
+        <span class="q-label" id="ql-3"></span>
+        <div class="q-text" id="qt-3"></div>
+        <div class="optional-tag" id="q3-optional"></div>
+        <div class="options" id="opts-3"></div>
+        <div class="nav">
+          <button class="btn-back" onclick="back(3)">←</button>
+          <button class="btn-next" id="btn-3" onclick="next(3)"></button>
+        </div>
+      </div>
+
+      <!-- Step: Final free-text feedback (always shown, optional) -->
+      <div class="slide" id="slide-4">
+        <span class="q-label" id="ql-4"></span>
+        <div class="q-text" id="qt-4"></div>
+        <div class="optional-tag" id="q4-optional"></div>
+        <textarea class="feedback-area" id="feedback"></textarea>
+        <div class="nav">
+          <button class="btn-back" onclick="back(4)">←</button>
+          <button class="btn-next" id="btn-4" onclick="submitSurvey()"></button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Thank you -->
+    <div class="thankyou" id="thankyou">
+      <div class="ty-mon" id="tyMon">&#x2741;</div>
+      <div class="ty-particles" id="tyParticles"></div>
+      <div class="ty-rule" id="tyRule"></div>
+      <div class="ty-main" id="tyMain"></div>
+      <div class="ty-sub" id="tySub"></div>
+      <div class="ty-smiley" id="tySmiley"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─── Logo ────────────────────────────────────────────────
+// ここにロゴ画像のURL（例: "https://example.com/logo.png"）を入力すると
+// ページ上部にロゴが表示されます。空欄の場合はロゴ欄は非表示になります。
+const LOGO_URL = "images/logo.png";
+if (LOGO_URL) {
+  document.getElementById('logoImg').src = LOGO_URL;
+} else {
+  document.getElementById('logoWrap').style.display = 'none';
+}
+
+// ─── Shared icons (not translated) ─────────────────────────
+const COUNTRY_ICONS = ['🇯🇵','🇰🇷','🇨🇳','🇹🇼','🇭🇰','🇹🇭','🇻🇳','🇸🇬','🇺🇸','🇨🇦','🇬🇧','🇫🇷','🇮🇹','🇪🇸','🇵🇹','🇦🇺','🇳🇿','🇷🇺','🌐'];
+const SOURCE_ICONS  = ['🔍','📸','📗','🍽️','🏨','🚶','✦'];
+const IMPROVEMENT_ICONS = ['📅','🎭','🙋','🍜','⏱️','🥤','❓','✅'];
+
+// ─── i18n ────────────────────────────────────────────────
+const I18N = {
+  ja: {
+    headerTitle: 'ご来店アンケート',
+    headerSub: 'Customer Satisfaction Survey',
+    qPrefix: 'Question ', qSuffix: '',
+    stepsLabels: { country:'国籍', rating:'満足度', source:'来店経緯', improvement:'改善点', feedback:'ご意見' },
+    questions: {
+      country: 'お客様のご出身はどちらでしょうか？',
+      rating: '本日のご来店はいかがでしたか？',
+      source: '当店をどのようにお知りになりましたか？',
+      improvementTitle: '改善点のフィードバック',
+      feedback: 'ご意見・ご感想をお聞かせください',
+    },
+    countries: ['日本','韓国','中国','台湾','香港','タイ','ベトナム','シンガポール','アメリカ','カナダ','イギリス','フランス','イタリア','スペイン','ポルトガル','オーストラリア','ニュージーランド','ロシア','その他'],
+    ratingLabels: ['大変不満','不満','普通','満足','大変満足'],
+    sources: ['Google','Instagram','NAVER Blog','大衆点評','Hotel','Walk in','その他'],
+    improvements: ['予約の方法がよくない','雰囲気が良くない','サービスが良くない','料理がおいしくない','料理提供が遅い','飲み物が遅い','それ以外の問題','特に問題は無かった'],
+    otherInputPlaceholder: '国名をご記入ください',
+    optionalTag: '（回答は任意です）',
+    feedbackPlaceholder: 'ご自由にご記入ください',
+    nextBtn: '次へ　→',
+    submitBtn: '送　信',
+    tyMain: 'ご回答ありがとうございます',
+    tySub: 'Thank you for your precious time.',
+  },
+  en: {
+    headerTitle: 'Guest Survey',
+    headerSub: 'We value your experience',
+    qPrefix: 'Question ', qSuffix: '',
+    stepsLabels: { country:'Country', rating:'Rating', source:'How?', improvement:'Improve', feedback:'Comments' },
+    questions: {
+      country: 'Where are you visiting from?',
+      rating: 'How was your experience today?',
+      source: 'How did you discover us?',
+      improvementTitle: 'Feedback on Improvements',
+      feedback: 'Any further comments or suggestions?',
+    },
+    countries: ['Japan','Korea','China','Taiwan','Hong Kong','Thailand','Vietnam','Singapore','USA','Canada','UK','France','Italy','Spain','Portugal','Australia','New Zealand','Russia','Other'],
+    ratingLabels: ['Very Poor','Poor','Average','Good','Excellent'],
+    sources: ['Google','Instagram','NAVER Blog','Dianping','Hotel','Walk in','Other'],
+    improvements: ['Reservation process was inconvenient','Atmosphere was not good','Service was not good','Food was not tasty','Food came out slowly','Drinks came out slowly','Other issue','No particular issue'],
+    otherInputPlaceholder: 'Please enter your country',
+    optionalTag: '(Optional)',
+    feedbackPlaceholder: 'Please share your thoughts…',
+    nextBtn: 'Next　→',
+    submitBtn: 'Submit',
+    tyMain: 'Thank you for your feedback',
+    tySub: 'Your response has been received.',
+  },
+  'zh-hans': {
+    headerTitle: '顾客满意度调查',
+    headerSub: 'Customer Satisfaction Survey',
+    qPrefix: '第 ', qSuffix: ' 题',
+    stepsLabels: { country:'国籍', rating:'满意度', source:'来源', improvement:'改善点', feedback:'意见' },
+    questions: {
+      country: '请问您来自哪个国家或地区？',
+      rating: '今天的体验如何？',
+      source: '您是如何得知本店的？',
+      improvementTitle: '改善建议反馈',
+      feedback: '欢迎留下您的宝贵意见',
+    },
+    countries: ['日本','韩国','中国','台湾','香港','泰国','越南','新加坡','美国','加拿大','英国','法国','意大利','西班牙','葡萄牙','澳大利亚','新西兰','俄罗斯','其他'],
+    ratingLabels: ['非常不满','不满意','一般','满意','非常满意'],
+    sources: ['Google','Instagram','NAVER Blog','大众点评','Hotel','Walk in','其他'],
+    improvements: ['预订方式不便','氛围不佳','服务不佳','菜品不好吃','上菜速度慢','饮品上得慢','其他问题','没有特别的问题'],
+    otherInputPlaceholder: '请填写您的国家/地区',
+    optionalTag: '（此项为选填）',
+    feedbackPlaceholder: '请在此处输入您的意见……',
+    nextBtn: '下一步　→',
+    submitBtn: '提　交',
+    tyMain: '感谢您的宝贵意见',
+    tySub: 'Thank you for your precious time.',
+  },
+  'zh-hant': {
+    headerTitle: '顧客滿意度調查',
+    headerSub: 'Customer Satisfaction Survey',
+    qPrefix: '第 ', qSuffix: ' 題',
+    stepsLabels: { country:'國籍', rating:'滿意度', source:'來源', improvement:'改善點', feedback:'意見' },
+    questions: {
+      country: '請問您來自哪個國家或地區？',
+      rating: '今天的體驗如何？',
+      source: '您是如何得知本店的？',
+      improvementTitle: '改善建議回饋',
+      feedback: '歡迎留下您的寶貴意見',
+    },
+    countries: ['日本','韓國','中國','台灣','香港','泰國','越南','新加坡','美國','加拿大','英國','法國','義大利','西班牙','葡萄牙','澳大利亞','紐西蘭','俄羅斯','其他'],
+    ratingLabels: ['非常不滿','不滿意','一般','滿意','非常滿意'],
+    sources: ['Google','Instagram','NAVER Blog','大眾點評','Hotel','Walk in','其他'],
+    improvements: ['預訂方式不便','氛圍不佳','服務不佳','菜品不好吃','上菜速度慢','飲品上得慢','其他問題','沒有特別的問題'],
+    otherInputPlaceholder: '請填寫您的國家/地區',
+    optionalTag: '（此項為選填）',
+    feedbackPlaceholder: '請在此處輸入您的意見……',
+    nextBtn: '下一步　→',
+    submitBtn: '提　交',
+    tyMain: '感謝您的寶貴意見',
+    tySub: 'Thank you for your precious time.',
+  },
+  ko: {
+    headerTitle: '방문 고객 설문',
+    headerSub: 'Customer Satisfaction Survey',
+    qPrefix: '질문 ', qSuffix: '',
+    stepsLabels: { country:'국가', rating:'만족도', source:'방문경로', improvement:'개선점', feedback:'의견' },
+    questions: {
+      country: '어느 나라에서 오셨나요?',
+      rating: '오늘의 경험은 어떠셨나요?',
+      source: '저희 가게를 어떻게 알게 되셨나요?',
+      improvementTitle: '개선점 피드백',
+      feedback: '소중한 의견을 남겨 주세요',
+    },
+    countries: ['일본','한국','중국','대만','홍콩','태국','베트남','싱가포르','미국','캐나다','영국','프랑스','이탈리아','스페인','포르투갈','호주','뉴질랜드','러시아','기타'],
+    ratingLabels: ['매우 불만','불만족','보통','만족','매우 만족'],
+    sources: ['Google','Instagram','NAVER 블로그','Dianping','Hotel','Walk in','기타'],
+    improvements: ['예약 방법이 불편했어요','분위기가 좋지 않았어요','서비스가 좋지 않았어요','음식이 맛없었어요','음식 제공이 느렸어요','음료 제공이 느렸어요','그 외 문제','특별한 문제는 없었어요'],
+    otherInputPlaceholder: '국가명을 입력해 주세요',
+    optionalTag: '(선택 사항입니다)',
+    feedbackPlaceholder: '자유롭게 의견을 남겨 주세요…',
+    nextBtn: '다음　→',
+    submitBtn: '제　출',
+    tyMain: '소중한 의견 감사합니다',
+    tySub: 'Thank you for your precious time.',
+  },
+  vi: {
+    headerTitle: 'Khảo Sát Khách Hàng',
+    headerSub: 'Customer Satisfaction Survey',
+    qPrefix: 'Câu hỏi ', qSuffix: '',
+    stepsLabels: { country:'Quốc gia', rating:'Đánh giá', source:'Biết đến', improvement:'Cải thiện', feedback:'Ý kiến' },
+    questions: {
+      country: 'Quý khách đến từ đâu?',
+      rating: 'Trải nghiệm hôm nay của quý khách thế nào?',
+      source: 'Quý khách biết đến chúng tôi qua đâu?',
+      improvementTitle: 'Phản hồi về những điểm cần cải thiện',
+      feedback: 'Vui lòng để lại ý kiến hoặc góp ý của quý khách',
+    },
+    countries: ['Nhật Bản','Hàn Quốc','Trung Quốc','Đài Loan','Hồng Kông','Thái Lan','Việt Nam','Singapore','Mỹ','Canada','Anh','Pháp','Ý','Tây Ban Nha','Bồ Đào Nha','Úc','New Zealand','Nga','Khác'],
+    ratingLabels: ['Rất không hài lòng','Không hài lòng','Bình thường','Hài lòng','Rất hài lòng'],
+    sources: ['Google','Instagram','NAVER Blog','Dianping','Hotel','Walk in','Khác'],
+    improvements: ['Cách đặt chỗ không thuận tiện','Không gian không tốt','Dịch vụ không tốt','Món ăn không ngon','Món ăn ra chậm','Đồ uống ra chậm','Vấn đề khác','Không có vấn đề gì đặc biệt'],
+    otherInputPlaceholder: 'Vui lòng nhập quốc gia của bạn',
+    optionalTag: '(Không bắt buộc)',
+    feedbackPlaceholder: 'Vui lòng chia sẻ ý kiến của quý khách…',
+    nextBtn: 'Tiếp theo　→',
+    submitBtn: 'Gửi',
+    tyMain: 'Cảm ơn quý khách đã phản hồi',
+    tySub: 'Chúng tôi trân trọng thời gian của quý khách.',
+  },
+};
+
+// ─── State ───────────────────────────────────────────────
+let lang = 'ja';
+let current = 0; // current slide id (0-4)
+const answers = {
+  countryIndex: null,
+  countryOther: '',
+  rating: null,        // '1'..'5'
+  sourceIndex: null,
+  improvements: new Set(), // indices into tr.improvements
+  feedback: '',
+};
+
+// ─── GAS ─────────────────────────────────────────────────
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwVn67gYTde2OwJfHrcDwGwwvJWJwp8x4BpxZTf0O6nVXpPb_CvzDPshNN8B2uuQRP1IA/exec";
+
+// ─── Helpers ─────────────────────────────────────────────
+function t() { return I18N[lang]; }
+function isBadRating()  { return answers.rating === '1' || answers.rating === '2'; }
+function isGoodRating() { return answers.rating === '4' || answers.rating === '5'; }
+// Sequence of slide ids that make up the current flow.
+// Slide 3 (improvement feedback) only appears when the rating is 悪い / とても悪い.
+function getFlow() { return isBadRating() ? [0,1,2,3,4] : [0,1,2,4]; }
+
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === l));
+  renderAll();
+}
+
+function renderAll() {
+  const tr = t();
+  document.getElementById('headerTitle').textContent = tr.headerTitle;
+  document.getElementById('headerSub').textContent   = tr.headerSub;
+  renderProgress();
+  renderSlide0();
+  renderSlide1();
+  renderSlide2();
+  renderSlide3();
+  renderSlide4();
+}
+
+function stepLabelFor(idx, tr) {
+  switch (idx) {
+    case 0: return tr.stepsLabels.country;
+    case 1: return tr.stepsLabels.rating;
+    case 2: return tr.stepsLabels.source;
+    case 3: return tr.stepsLabels.improvement;
+    case 4: return tr.stepsLabels.feedback;
+  }
+}
+
+function updateQLabel(slideIdx) {
+  const tr = t();
+  const seq = getFlow();
+  const pos = seq.indexOf(slideIdx);
+  const n = pos === -1 ? seq.length : pos + 1;
+  const el = document.getElementById('ql-' + slideIdx);
+  if (el) el.textContent = tr.qPrefix + String(n).padStart(2, '0') + tr.qSuffix;
+}
+
+function renderProgress() {
+  const tr = t();
+  const seq = getFlow();
+  const pos = seq.indexOf(current);
+  const ps = document.getElementById('progressSteps');
+  ps.innerHTML = '';
+  seq.forEach((slideIdx, i) => {
+    const node = document.createElement('div');
+    node.className = 'step-node' + (i === pos ? ' active' : '');
+    const circle = document.createElement('div');
+    circle.className = 'step-circle' + (i < pos ? ' done' : i === pos ? ' active' : '');
+    circle.textContent = i < pos ? '✓' : (i + 1);
+    const label = document.createElement('div');
+    label.className = 'step-label';
+    label.textContent = stepLabelFor(slideIdx, tr);
+    node.appendChild(circle);
+    node.appendChild(label);
+    ps.appendChild(node);
+    if (i < seq.length - 1) {
+      const conn = document.createElement('div');
+      conn.className = 'step-connector';
+      ps.appendChild(conn);
+    }
+  });
+}
+
+function renderSlide0() {
+  const tr = t();
+  updateQLabel(0);
+  document.getElementById('qt-0').textContent = tr.questions.country;
+  const container = document.getElementById('opts-0');
+  container.innerHTML = '';
+  tr.countries.forEach((c, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt' + (answers.countryIndex === i ? ' selected' : '');
+    btn.innerHTML = `<span class="opt-icon">${COUNTRY_ICONS[i]}</span>${c}`;
+    btn.onclick = () => {
+      answers.countryIndex = i;
+      renderSlide0();
+    };
+    container.appendChild(btn);
+  });
+
+  const isOther = answers.countryIndex === tr.countries.length - 1;
+  const otherWrap  = document.getElementById('countryOtherWrap');
+  const otherInput = document.getElementById('countryOtherInput');
+  otherWrap.style.display = isOther ? 'block' : 'none';
+  otherInput.placeholder = tr.otherInputPlaceholder;
+  otherInput.value = answers.countryOther;
+  otherInput.oninput = (e) => { answers.countryOther = e.target.value; };
+
+  document.getElementById('btn-0').textContent = tr.nextBtn;
+  document.getElementById('btn-0').disabled = answers.countryIndex === null;
+}
+
+function renderSlide1() {
+  const tr = t();
+  updateQLabel(1);
+  document.getElementById('qt-1').textContent = tr.questions.rating;
+  const container  = document.getElementById('opts-1');
+  const container2 = document.getElementById('opts-1b');
+  container.innerHTML  = '';
+  container2.innerHTML = '';
+  const stars = ['★','★★','★★★','★★★★','★★★★★'];
+  for (let v = 1; v <= 5; v++) {
+    const btn = document.createElement('button');
+    btn.className = 'star-opt' + (answers.rating === String(v) ? ' selected' : '');
+    btn.innerHTML = `<span class="star-glyph">${stars[v-1]}</span><span class="star-num">${tr.ratingLabels[v-1]}</span>`;
+    const val = String(v);
+    btn.onclick = () => {
+      answers.rating = val;
+      renderSlide1();
+      renderProgress();
+      document.getElementById('btn-1').disabled = false;
+    };
+    if (v <= 3) container.appendChild(btn);
+    else container2.appendChild(btn);
+  }
+  document.getElementById('btn-1').textContent = tr.nextBtn;
+  document.getElementById('btn-1').disabled = !answers.rating;
+}
+
+function renderSlide2() {
+  const tr = t();
+  updateQLabel(2);
+  document.getElementById('qt-2').textContent = tr.questions.source;
+  const container = document.getElementById('opts-2');
+  container.innerHTML = '';
+  tr.sources.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt' + (answers.sourceIndex === i ? ' selected' : '');
+    btn.innerHTML = `<span class="opt-icon">${SOURCE_ICONS[i]}</span>${s}`;
+    btn.onclick = () => {
+      answers.sourceIndex = i;
+      renderSlide2();
+      document.getElementById('btn-2').disabled = false;
+    };
+    container.appendChild(btn);
+  });
+  document.getElementById('btn-2').textContent = tr.nextBtn;
+  document.getElementById('btn-2').disabled = answers.sourceIndex === null;
+}
+
+function renderSlide3() {
+  const tr = t();
+  updateQLabel(3);
+  document.getElementById('qt-3').textContent = tr.questions.improvementTitle;
+  document.getElementById('q3-optional').textContent = tr.optionalTag;
+  const container = document.getElementById('opts-3');
+  container.innerHTML = '';
+  tr.improvements.forEach((s, i) => {
+    const btn = document.createElement('button');
+    const selected = answers.improvements.has(i);
+    btn.className = 'opt' + (selected ? ' selected' : '');
+    btn.innerHTML = `<span class="opt-icon">${IMPROVEMENT_ICONS[i]}</span>${s}`;
+    btn.onclick = () => {
+      if (answers.improvements.has(i)) answers.improvements.delete(i);
+      else answers.improvements.add(i);
+      renderSlide3();
+    };
+    container.appendChild(btn);
+  });
+  document.getElementById('btn-3').textContent = tr.nextBtn;
+  document.getElementById('btn-3').disabled = false; // optional
+}
+
+function renderSlide4() {
+  const tr = t();
+  updateQLabel(4);
+  document.getElementById('qt-4').textContent = tr.questions.feedback;
+  document.getElementById('q4-optional').textContent = tr.optionalTag;
+  document.getElementById('feedback').placeholder = tr.feedbackPlaceholder;
+  document.getElementById('btn-4').textContent = tr.submitBtn;
+}
+
+// ─── Navigation ───────────────────────────────────────────
+function navigate(from, to) {
+  const fromEl = document.getElementById('slide-' + from);
+  const toEl   = document.getElementById('slide-' + to);
+  const forward = to > from;
+
+  fromEl.style.animation = '';
+  fromEl.style.animationName = forward ? 'slideOut' : 'slideOutReverse';
+  fromEl.classList.add('exit');
+
+  setTimeout(() => {
+    fromEl.classList.remove('active', 'exit');
+    fromEl.style.animation = '';
+    if (!forward) {
+      toEl.style.animation = 'slideInReverse .45s cubic-bezier(.16,1,.3,1) forwards';
+    }
+    toEl.classList.add('active');
+    current = to;
+    renderProgress();
+    if (!forward) {
+      setTimeout(() => { toEl.style.animation = ''; }, 500);
+    }
+  }, 350);
+}
+
+// Extra keyframes for the "back" direction
+const styleEl = document.createElement('style');
+styleEl.textContent = `
+  @keyframes slideOutReverse {
+    from { opacity:1; transform:translateX(0); }
+    to   { opacity:0; transform:translateX(28px); }
+  }
+  @keyframes slideInReverse {
+    from { opacity:0; transform:translateX(-28px); }
+    to   { opacity:1; transform:translateX(0); }
+  }
+`;
+document.head.appendChild(styleEl);
+
+function next(step) {
+  const to = step === 2 ? (isBadRating() ? 3 : 4)
+           : step === 3 ? 4
+           : step + 1;
+  navigate(step, to);
+}
+function back(step) {
+  const to = step === 4 ? (isBadRating() ? 3 : 2)
+           : step === 3 ? 2
+           : step - 1;
+  navigate(step, to);
+}
+
+// ─── Submit ───────────────────────────────────────────────
+async function submitSurvey() {
+  answers.feedback = document.getElementById('feedback').value;
+  const btn = document.getElementById('btn-4');
+  btn.disabled = true;
+  btn.textContent = '…';
+
+  const tr = t();
+  // 国名はスプレッドシートには常に英語で登録する（回答言語に関わらず）
+  const countryTr = I18N.en;
+  const countryText = answers.countryIndex === null ? '' :
+    (answers.countryIndex === countryTr.countries.length - 1 && answers.countryOther
+      ? `${countryTr.countries[answers.countryIndex]}（${answers.countryOther}）`
+      : countryTr.countries[answers.countryIndex]);
+  const sourceText = answers.sourceIndex === null ? '' : tr.sources[answers.sourceIndex];
+  const improvementText = Array.from(answers.improvements).map(i => tr.improvements[i]).join('、');
+  // 改善点の回答がある場合は、【】で囲んでフィードバック本文の先頭に付けて出力する
+  const combinedFeedback = improvementText
+    ? `【${improvementText}】${answers.feedback ? '\n' + answers.feedback : ''}`
+    : answers.feedback;
+
+  try {
+    await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        country:      countryText,
+        rating:       answers.rating,
+        source:       sourceText,
+        improvements: improvementText,
+        feedback:     combinedFeedback,
+        lang:         lang,
+      })
+    });
+  } catch(e) { console.error(e); }
+
+  showThankyou();
+}
+
+// ─── Thank you ────────────────────────────────────────────
+function showThankyou() {
+  const tr = t();
+  document.getElementById('progressWrap').style.display = 'none';
+  document.getElementById('slideViewport').style.display = 'none';
+  document.querySelector('.header').style.display = 'none';
+
+  const ty = document.getElementById('thankyou');
+  ty.classList.add('show');
+
+  const mon    = document.getElementById('tyMon');
+  const rule   = document.getElementById('tyRule');
+  const main   = document.getElementById('tyMain');
+  const sub    = document.getElementById('tySub');
+  const smiley = document.getElementById('tySmiley');
+
+  main.textContent = tr.tyMain;
+  sub.textContent  = tr.tySub;
+
+  if (isGoodRating()) {
+    smiley.textContent = '😊';
+    smiley.style.display = 'block';
+  } else {
+    smiley.textContent = '';
+    smiley.style.display = 'none';
+  }
+
+  // Stagger animations
+  setTimeout(() => mon.classList.add('visible'),    100);
+  setTimeout(() => spawnPetals(),                   600);
+  setTimeout(() => rule.classList.add('visible'),   400);
+  setTimeout(() => main.classList.add('visible'),   600);
+  setTimeout(() => sub.classList.add('visible'),    900);
+  setTimeout(() => smiley.classList.add('visible'), 1150);
+}
+
+function spawnPetals() {
+  const container = document.getElementById('tyParticles');
+  const petals = ['✿','❀','✾','✽','❁','✦','✧','◈','❋'];
+  for (let i = 0; i < 12; i++) {
+    const span = document.createElement('span');
+    span.textContent = petals[Math.floor(Math.random() * petals.length)];
+    span.style.left  = (10 + Math.random() * 80) + '%';
+    span.style.color = Math.random() > .5 ? '#B8874A' : '#948C82';
+    span.style.animationDelay = (Math.random() * 1.2) + 's';
+    span.style.fontSize = (12 + Math.random() * 10) + 'px';
+    container.appendChild(span);
+  }
+}
+
+// ─── Init ─────────────────────────────────────────────────
+renderAll();
+
+// Adjust card top margin to match lang-bar height dynamically
+function adjustCardMargin() {
+  const bar = document.getElementById('langBar');
+  const card = document.querySelector('.card');
+  if (bar && card) {
+    card.style.marginTop = (bar.offsetHeight + 8) + 'px';
+  }
+}
+adjustCardMargin();
+window.addEventListener('resize', adjustCardMargin);
+</script>
+</body>
+</html>
